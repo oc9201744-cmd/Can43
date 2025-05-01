@@ -1,0 +1,17 @@
+Package: com.chetto
+Name: ESP Chettofake
+Version: 3.6.0
+Description: 
+Section: Tweaks
+Depends: firmware (>= 11.0)
+Conflicts: 
+Replaces: 
+Priority: optional
+Architecture: iphoneos-arm
+Author: linhcute
+dev: 
+Homepage: 
+Depiction: 
+Maintainer: 
+Icon: 
+
