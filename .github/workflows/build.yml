@@ -17,9 +17,7 @@ jobs:
           submodules: recursive
 
       - name: ⚙️ Gerekli Paketleri Kur
-        run: |
-          brew install ldid dpkg xz
-          # fakeroot kurmuyoruz, çünkü macOS kütüphane hatası veriyor.
+        run: brew install ldid dpkg xz
 
       - name: 🛠️ Theos ve SDK Hazırlığı
         run: |
@@ -29,8 +27,7 @@ jobs:
       - name: 🚀 Tweak'i Derle ve Paketle
         run: |
           export THEOS=$GITHUB_WORKSPACE/theos
-          # FAKEROOT=0 hatayı çözer, THEOS=$THEOS yolu Makefile'daki hatayı ezer.
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless THEOS=$THEOS FAKEROOT=0
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless THEOS="$THEOS" FAKEROOT=0
 
       - name: 📦 .deb Dosyasını Çıktı Olarak Al
         uses: actions/upload-artifact@v4
