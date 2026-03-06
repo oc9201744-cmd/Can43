@@ -3,42 +3,35 @@ name: Compile Theos Tweak
 on:
   push:
     branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
-  # Manuel tetiklemeye izin verir
   workflow_dispatch: 
 
 jobs:
   build:
-    name: Build iOS Tweak (Rootless)
+    name: Build iOS Tweak
     runs-on: macos-latest
 
     steps:
-      - name: 📥 Depoyu İndir (Checkout)
+      - name: 📥 Repo Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: ⚙️ Gerekli Paketleri Kur
-        run: |
-          brew install ldid dpkg xz fakeroot
+        run: brew install ldid dpkg xz fakeroot
 
-      - name: 🛠️ Theos ve iOS SDK'larını Ayarla
+      - name: 🛠️ Theos ve SDK Kurulumu
         run: |
-          echo "Theos indiriliyor..."
-          git clone --recursive https://github.com/theos/theos.git ${{ github.workspace }}/theos
-          echo "iOS SDK'ları indiriliyor..."
-          curl -sL https://github.com/theos/sdks/archive/master.tar.gz | tar -x -z --strip-components=1 -C ${{ github.workspace }}/theos/sdks
+          git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
+          curl -sL https://github.com/theos/sdks/archive/master.tar.gz | tar -x -z --strip-components=1 -C $GITHUB_WORKSPACE/theos/sdks
 
       - name: 🚀 Tweak'i Derle
         run: |
-          export THEOS="${{ github.workspace }}/theos"
-          # Makefile içindeki ayarlarınızı kullanarak derleme yapar
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          # THEOS değişkenini hem export ediyoruz hem de make komutuna parametre geçiyoruz
+          export THEOS=$GITHUB_WORKSPACE/theos
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless THEOS=$THEOS
 
-      - name: 📦 .deb Dosyasını Yükle (Artifact)
+      - name: 📦 Çıktıyı Kaydet
         uses: actions/upload-artifact@v4
         with:
-          name: ESP-Tweak-Rootless
+          name: ESP-Tweak
           path: packages/*.deb
-          retention-days: 7
