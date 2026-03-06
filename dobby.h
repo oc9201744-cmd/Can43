@@ -1,13 +1,17 @@
 #ifndef dobby_h
 #define dobby_h
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+/**
+ * Modern iOS SDK ve Clang derleyicilerinde "module-import-in-extern-c" 
+ * hatasını önlemek için sistem kütüphaneleri dışarıda tutulmalıdır.
+ */
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef uintptr_t addr_t;
 typedef uint32_t addr32_t;
@@ -122,7 +126,6 @@ int DobbyCodePatch(void *address, uint8_t *buffer, uint32_t buffer_size);
 int DobbyHook(void *address, void *fake_func, void **out_origin_func);
 
 // dynamic binary instruction instrument
-// for Arm64, can't access q8 - q31, unless enable full floating-point register pack
 typedef void (*dobby_instrument_callback_t)(void *address, DobbyRegisterContext *ctx);
 int DobbyInstrument(void *address, dobby_instrument_callback_t pre_handler);
 
@@ -138,7 +141,6 @@ void *DobbySymbolResolver(const char *image_name, const char *symbol_name);
 int DobbyImportTableReplace(char *image_name, char *symbol_name, void *fake_func, void **orig_func);
 
 // for arm, Arm64, try use b xxx instead of ldr absolute indirect branch
-// for x86, x64, always use absolute indirect jump
 void dobby_set_near_trampoline(bool enable);
 
 // register callback for alloc near code block
