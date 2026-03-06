@@ -1,4 +1,4 @@
-name: ESP-Tweak-Build
+name: Build-ESP-Tweak
 
 on:
   push:
@@ -11,25 +11,40 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: 📥 Repo Checkout
+      - name: 📥 Depoyu İndir (Checkout)
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: ⚙️ Gerekli Paketleri Kur
-        run: brew install ldid dpkg xz
+        run: |
+          brew install ldid dpkg xz
+          # fakeroot kurulmuyor, macOS üzerinde mimari hatası veriyor.
 
       - name: 🛠️ Theos ve SDK Hazırlığı
         run: |
           git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
           curl -sL https://github.com/theos/sdks/archive/master.tar.gz | tar -x -z --strip-components=1 -C $GITHUB_WORKSPACE/theos/sdks
 
+      - name: 🔍 Dosya Yapısını Kontrol Et (Hata Ayıklama)
+        run: |
+          echo "Derleme öncesi klasör yapısı:"
+          find . -maxdepth 3 -not -path '*/.*'
+
       - name: 🚀 Tweak'i Derle ve Paketle
         run: |
+          # THEOS yolunu tanımla
           export THEOS=$GITHUB_WORKSPACE/theos
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless THEOS="$THEOS" FAKEROOT=0
+          
+          # Makefile içindeki yolları ezmek ve paketleme hatasını önlemek için:
+          # FAKEROOT=0 sayesinde 'bash: 0: command not found' hatası çözülür.
+          make package \
+            FINALPACKAGE=1 \
+            THEOS_PACKAGE_SCHEME=rootless \
+            THEOS="$THEOS" \
+            FAKEROOT=0
 
-      - name: 📦 .deb Dosyasını Çıktı Olarak Al
+      - name: 📦 .deb Dosyasını Kaydet (Artifact)
         uses: actions/upload-artifact@v4
         with:
           name: ESP-Rootless-Build
