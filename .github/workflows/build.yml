@@ -1,13 +1,13 @@
-name: Compile Theos Tweak
+name: ESP-Tweak-Build
 
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build iOS Tweak
+    name: Build iOS Tweak (Rootless)
     runs-on: macos-latest
 
     steps:
@@ -17,21 +17,23 @@ jobs:
           submodules: recursive
 
       - name: ⚙️ Gerekli Paketleri Kur
-        run: brew install ldid dpkg xz fakeroot
+        run: |
+          brew install ldid dpkg xz
+          # fakeroot kurmuyoruz, çünkü macOS kütüphane hatası veriyor.
 
-      - name: 🛠️ Theos ve SDK Kurulumu
+      - name: 🛠️ Theos ve SDK Hazırlığı
         run: |
           git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
           curl -sL https://github.com/theos/sdks/archive/master.tar.gz | tar -x -z --strip-components=1 -C $GITHUB_WORKSPACE/theos/sdks
 
-      - name: 🚀 Tweak'i Derle
+      - name: 🚀 Tweak'i Derle ve Paketle
         run: |
-          # THEOS değişkenini hem export ediyoruz hem de make komutuna parametre geçiyoruz
           export THEOS=$GITHUB_WORKSPACE/theos
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless THEOS=$THEOS
+          # FAKEROOT=0 hatayı çözer, THEOS=$THEOS yolu Makefile'daki hatayı ezer.
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless THEOS=$THEOS FAKEROOT=0
 
-      - name: 📦 Çıktıyı Kaydet
+      - name: 📦 .deb Dosyasını Çıktı Olarak Al
         uses: actions/upload-artifact@v4
         with:
-          name: ESP-Tweak
+          name: ESP-Rootless-Build
           path: packages/*.deb
